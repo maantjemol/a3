@@ -154,49 +154,72 @@ class DroneExtinguisher:
         In this function, we fill the memory structures self.idle_cost and self.optimal_cost making use of functions defined above. 
         This function does not return anything. 
         """
-        # print(self.optimal_cost)
-        # print(self.usage_cost)
 
         for i in range(self.num_bags):
             for j in range(self.num_bags):
+                # Compute the idle time in liters between bag i and bag j
                 idle_cost_liters = self.compute_sequence_idle_time_in_liters(
                     i, j)
+                # Compute the idle cost between bag i and bag j
                 idle_cost = self.compute_idle_cost(i, j, idle_cost_liters)
+                # Store the idle cost in the idle_cost matrix
                 self.idle_cost[i, j] = idle_cost
 
+        # Print the idle_cost matrix
         print("\n", self.idle_cost)
 
+        # Initialize total_cost_prev_days variable
         total_cost_prev_days = 0
 
+        # Initialize from_bag_index and water_bag_index variables
         from_bag_index = 0
         water_bag_index = 0
+
+        # Iterate over the optimal_cost matrix
         while water_bag_index < len(self.optimal_cost):
             for drone_index in range(len(self.optimal_cost[water_bag_index])):
+                # Skip the first iteration if water_bag_index is 0
                 if water_bag_index == 0:
                     continue
 
+                # Print from_bag_index and water_bag_index
                 print(from_bag_index, water_bag_index)
 
+                # Retrieve the idle cost from the idle_cost matrix
                 idle_cost = self.idle_cost[from_bag_index, water_bag_index - 1]
+                # Compute the usage cost
                 usage_cost = self.compute_sequence_usage_cost(
                     from_bag_index, water_bag_index - 1, drone_index)
+                # Compute the total cost as the sum of idle cost and usage cost
                 total_cost = idle_cost + usage_cost
+
+                # Print the total cost, usage cost, and idle cost
                 print(
                     f"\nTotal cost: {total_cost}\nUsage cost: {usage_cost}\nIdle cost: {idle_cost}\n")
 
-                if (idle_cost == np.inf):
+                # Check if we are at the end of a day (idle cost is infinite)
+                if idle_cost == np.inf:
+                    # Retrieve the best idle cost from the previous day
                     best_idle_cost = self.idle_cost[from_bag_index,
                                                     water_bag_index - 2]
+                    # Add the best idle cost to total_cost_prev_days
                     total_cost_prev_days += best_idle_cost
+                    # Set the optimal cost for the current drone as the best idle cost
                     self.optimal_cost[water_bag_index][drone_index] = best_idle_cost
+                    # Move back one water bag index
                     water_bag_index -= 1
+                    # Update from_bag_index
                     from_bag_index = water_bag_index
                     continue
 
+                # Set the optimal cost for the current drone as the total cost plus total_cost_prev_days
                 self.optimal_cost[water_bag_index][drone_index] = total_cost + \
                     total_cost_prev_days
 
+            # Increment water_bag_index
             water_bag_index += 1
+
+        # Print the optimal_cost matrix
         print(self.optimal_cost)
 
     def lowest_cost(self) -> float:
