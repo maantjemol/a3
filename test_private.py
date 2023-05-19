@@ -30,3 +30,31 @@ class TestDroneExtinguisher(unittest.TestCase):
         i = 0
         j = 0
         self.assertEqual(de.compute_idle_cost(0, 0, 0), 0)
+
+    def test_dynamic_programming_with_negative_budget(self):
+        forest_location = (0, 0)
+        bags = [3, 9, 2, 3, 19]
+        bag_locations = [(3, 4) for _ in range(len(bags))]
+        liter_cost_per_km = 0.1
+        liter_budget_per_day = -1  # negative budget for the day, no bags can be transported
+        usage_cost = np.array([[1],
+                               [1],
+                               [1],
+                               [1],
+                               [1]])
+
+        solution = np.inf
+
+        de = DroneExtinguisher(
+            forest_location=forest_location,
+            bags=bags,
+            bag_locations=bag_locations,
+            liter_cost_per_km=liter_cost_per_km,
+            liter_budget_per_day=liter_budget_per_day,
+            usage_cost=usage_cost
+        )
+
+        de.fill_travel_costs_in_liters()
+        de.dynamic_programming()
+        lowest_cost = de.lowest_cost()
+        self.assertEqual(lowest_cost, solution)
